@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.activity.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -17,41 +18,46 @@ import org.w3c.dom.Text
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private var data = arrayListOf<Todo>()
+    private val viewModel : TodoAdapter.MainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
 
+
         binding.rvItem.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = TodoAdapter(data, onClickDelete = {
-                deleteTodo(it)
-            }, onClickItem = { toggleTodo(it) })
+            adapter = TodoAdapter(viewModel.data, onClickDelete = {
+                viewModel.deleteTodo(it)
+
+            }, onClickItem = {
+                viewModel.toggleTodo(it)
+            })
         }
 
         binding.addBtn.setOnClickListener {
             val todo = Todo(binding.addEt.text.toString())
-            addTodo(todo)
+            viewModel.addTodo(todo)
+            binding.rvItem.adapter?.notifyDataSetChanged()
         }
     }
 
-    private fun toggleTodo(todo: Todo) {
-        todo.isDone = !todo.isDone
-        binding.rvItem.adapter?.notifyDataSetChanged()
-    }
-
-    private fun addTodo(todo: Todo) {
-        val todoText = binding.addEt.text.toString()
-        data.add(Todo(todoText))
-        binding.rvItem.adapter?.notifyDataSetChanged()
-    }
-
-    private fun deleteTodo(todo: Todo) {
-        data.remove(todo)
-        binding.rvItem.adapter?.notifyDataSetChanged()
-    }
+//    private fun toggleTodo(todo: Todo) {
+//        todo.isDone = !todo.isDone
+//        binding.rvItem.adapter?.notifyDataSetChanged()
+//    }
+//
+//    private fun addTodo() {
+//        val todoText = binding.addEt.text.toString()
+//        data.add(Todo(todoText))
+//        binding.rvItem.adapter?.notifyDataSetChanged()
+//    }
+//
+//    private fun deleteTodo(todo: Todo) {
+//        data.remove(todo)
+//        binding.rvItem.adapter?.notifyDataSetChanged()
+//    }
 }
 
 data class Todo(
@@ -97,4 +103,19 @@ class TodoAdapter(
         holder.binding.root.setOnClickListener { onClickItem.invoke(todo) }
     }
 
+    class MainViewModel : ViewModel() {
+        val data = arrayListOf<Todo>()
+
+        fun toggleTodo(todo: Todo) {
+            todo.isDone = !todo.isDone
+        }
+
+        fun addTodo(todo: Todo) {
+            data.add(todo)
+        }
+
+        fun deleteTodo(todo: Todo) {
+            data.remove(todo)
+        }
+    }
 }
